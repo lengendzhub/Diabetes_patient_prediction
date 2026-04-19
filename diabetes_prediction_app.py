@@ -13,8 +13,11 @@ def load_model():
     except FileNotFoundError:
         st.error(f"Model file not found at {model_path}. Please ensure trained_model.sav exists in the application directory.")
         st.stop()
-    except Exception as exc:
-        st.error(f"Failed to load model: {exc}")
+    except (pickle.UnpicklingError, EOFError) as exc:
+        st.error(f"Model file at {model_path} appears corrupted or incompatible: {exc}")
+        st.stop()
+    except OSError as exc:
+        st.error(f"Unable to read model file at {model_path}: {exc}")
         st.stop()
 
 
