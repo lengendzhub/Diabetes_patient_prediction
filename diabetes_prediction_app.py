@@ -1,15 +1,25 @@
 import numpy as np
 import pickle
+from pathlib import Path
 import streamlit as st
-import os
 
-# loading the saved model (relative path — same folder as this script)
-model_path = os.path.join(os.path.dirname(__file__), 'trained_model.sav')
-loaded_model = pickle.load(open(model_path, 'rb'))
+
+@st.cache_resource
+def load_model():
+    model_path = Path(__file__).resolve().parent / "trained_model.sav"
+    try:
+        with model_path.open("rb") as model_file:
+            return pickle.load(model_file)
+    except FileNotFoundError:
+        st.error(f"Model file not found at {model_path}.")
+        st.stop()
+    except Exception as exc:
+        st.error(f"Failed to load model: {exc}")
+        st.stop()
 
 
 # creating a function for Prediction
-def diabetes_prediction(input_data):
+def diabetes_prediction(input_data, model):
 
     # changing the input_data to numpy array (as floats)
     input_data_as_numpy_array = np.asarray(input_data, dtype=float)
@@ -17,7 +27,7 @@ def diabetes_prediction(input_data):
     # reshape the array as we are predicting for one instance
     input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
 
-    prediction = loaded_model.predict(input_data_reshaped)
+    prediction = model.predict(input_data_reshaped)
 
     if prediction[0] == 0:
         return 'The person is **not diabetic** ✅'
@@ -34,6 +44,8 @@ def main():
     st.title('🩺 Diabetes Prediction Web App')
     st.markdown('Enter the patient details below and click **Predict** to check for diabetes.')
     st.markdown('---')
+
+    model = load_model()
 
     # getting the input data from the user in two columns
     col1, col2 = st.columns(2)
@@ -57,7 +69,7 @@ def main():
         diagnosis = diabetes_prediction([
             Pregnancies, Glucose, BloodPressure, SkinThickness,
             Insulin, BMI, DiabetesPedigreeFunction, Age
-        ])
+        ], model)
         st.subheader('Result:')
         if 'not diabetic' in diagnosis:
             st.success(diagnosis)
