@@ -11,11 +11,7 @@ def load_model():
         with model_path.open("rb") as model_file:
             return pickle.load(model_file)
     except FileNotFoundError:
-        st.error(
-            "Model file not found at "
-            f"{model_path}. Please ensure trained_model.sav exists in the "
-            "application directory."
-        )
+        st.error(f"Model file not found at {model_path}. Please ensure trained_model.sav exists in the application directory.")
         st.stop()
     except Exception as exc:
         st.error(f"Failed to load model: {exc}")
